@@ -1,0 +1,79 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Description: E Bank Lambda function for processing user data.
+
+Parameters:
+  StackName:
+    Type: String
+    Description: Stack name for unique resource naming
+    Default: eBankStack
+
+Resources:
+  # The IAM Role for the Lambda function.
+  # This role has a trust policy allowing the Lambda service to assume it.
+  # It also has an inline policy that only grants permission for the Lambda function
+  # to get its code from the S3 bucket.
+  EBankLambdaRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: "EBankLambdaRole"
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: lambda.amazonaws.com
+            Action:
+              - sts:AssumeRole
+      Policies:
+        - PolicyName: S3AccessForCode
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Effect: Allow
+                Action:
+                  - s3:GetObject
+                Resource: !Sub "arn:aws:s3:::e-bank-lambda-function-${AWS::AccountId}/index.zip"
+        - PolicyName: S3AccessForRuntime
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Effect: Allow
+                Action:
+                  - s3:GetObject
+                  - s3:PutObject
+                Resource: !Sub "arn:aws:s3:::e-bank-user-data-${AWS::AccountId}/*"
+        - PolicyName: CloudWatchLogs
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Effect: Allow
+                Action:
+                  - logs:CreateLogGroup
+                  - logs:CreateLogStream
+                  - logs:PutLogEvents
+                Resource: arn:aws:logs:*:*:*
+
+  # The Lambda function itself, using the role created above.
+  EBankLambdaFunction:
+    Type: AWS::Lambda::Function
+    Properties:
+      FunctionName: "E-Bank-Backend"
+      Handler: index.handler
+      Runtime: nodejs20.x
+      Role: !GetAtt EBankLambdaRole.Arn
+      Code:
+        S3Bucket: !Sub "e-bank-lambda-function-${AWS::AccountId}"
+        S3Key: "index.zip"
+      Timeout: 10
+
+Outputs:
+  LambdaFunctionArn:
+    Description: ARN of the created Lambda function.
+    Value: !GetAtt EBankLambdaFunction.Arn
+    Export:
+      Name: !Sub "${StackName}-LambdaFunctionArn"
+  LambdaFunctionName:
+    Description: Name of the created Lambda function.
+    Value: !Ref EBankLambdaFunction
+    Export:
+      Name: !Sub "${StackName}-LambdaFunctionName"

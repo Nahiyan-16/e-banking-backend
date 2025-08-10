@@ -5,14 +5,22 @@ import {
   GetObjectCommand,
   PutObjectCommand,
 } from "@aws-sdk/client-s3";
+import { STSClient, GetCallerIdentityCommand } from "@aws-sdk/client-sts";
 
 const app = express();
 app.use(cors());
 app.use(express.json());
 
-const s3Client = new S3Client({ region: "us-east-1" });
-const BUCKET_NAME = "e-bank-user-data";
+const REGION = "us-east-1";
+const s3Client = new S3Client({ region: REGION });
+const stsClient = new STSClient({ region: REGION });
+
 const PREFIX = "users/";
+
+async function getAccountId() {
+  const data = await stsClient.send(new GetCallerIdentityCommand({}));
+  return data.Account;
+}
 
 function streamToString(stream) {
   return new Promise((resolve, reject) => {
@@ -26,6 +34,10 @@ function streamToString(stream) {
 // ------------------ Routes ------------------
 
 app.get("/user", async (req, res) => {
+  const accountId = await getAccountId();
+  const BUCKET_NAME = `e-bank-user-data-${accountId}`;
+  // const BUCKET_NAME = `e-bank-user-data-874924261412`;
+
   const username = req.query.username;
   if (!username) return res.status(400).json({ error: "Missing 'username'" });
 
@@ -45,6 +57,10 @@ app.get("/user", async (req, res) => {
 });
 
 app.post("/user", async (req, res) => {
+  const accountId = await getAccountId();
+  // const BUCKET_NAME = `e-bank-user-data-${accountId}`;
+  const BUCKET_NAME = `e-bank-user-data-874924261412`;
+
   const body = req.body;
   const username = body.username;
   const key = `${PREFIX}${username}.json`;
