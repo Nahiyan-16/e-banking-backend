@@ -1,4 +1,4 @@
-# e-Banking App — Backend Deployment Guide
+# 🏦 e-Banking App — Backend Deployment Guide
 
 ## Prerequisites
 
