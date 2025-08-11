@@ -19,8 +19,6 @@ Resources:
     Type: AWS::S3::Bucket
     Properties:
       BucketName: !Sub "e-bank-user-data-${AWS::AccountId}"
-      VersioningConfiguration:
-        Status: Enabled
 
   EBankLambdaRole:
     Type: AWS::IAM::Role
@@ -248,10 +246,7 @@ Resources:
       RestApiId: !Ref ApiGatewayRestApi
       IdentitySource: method.request.header.Authorization
       ProviderARNs:
-        - !Sub
-          - arn:aws:cognito-idp:${AWS::Region}:${AWS::AccountId}:userpool/${UserPoolId}
-          - UserPoolId: !ImportValue
-              Fn::Sub: "${StackName}-UserPoolId"
+        - !GetAtt UserPool.Arn
 
   ApiGatewayMethodUsersGet:
     Type: AWS::ApiGateway::Method
@@ -267,8 +262,7 @@ Resources:
         IntegrationHttpMethod: POST
         Uri: !Sub
           - arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${LambdaArn}/invocations
-          - LambdaArn: !ImportValue
-              Fn::Sub: "${StackName}-LambdaFunctionArn"
+          - LambdaArn: !GetAtt EBankLambdaFunction.Arn
 
   ApiGatewayMethodUsersPost:
     Type: AWS::ApiGateway::Method
@@ -283,8 +277,7 @@ Resources:
         IntegrationHttpMethod: POST
         Uri: !Sub
           - arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${LambdaArn}/invocations
-          - LambdaArn: !ImportValue
-              Fn::Sub: "${StackName}-LambdaFunctionArn"
+          - LambdaArn: !GetAtt EBankLambdaFunction.Arn
 
   ApiGatewayMethodUsersOptions:
     Type: AWS::ApiGateway::Method
@@ -359,9 +352,10 @@ Resources:
 
   LambdaInvokePermission:
     Type: AWS::Lambda::Permission
+    DependsOn:
+      - ApiGatewayDeployment
     Properties:
-      FunctionName: !ImportValue
-        Fn::Sub: "${StackName}-LambdaFunctionArn"
+      FunctionName: !GetAtt EBankLambdaFunction.Arn
       Action: lambda:InvokeFunction
       Principal: apigateway.amazonaws.com
       SourceArn: !Sub
@@ -424,3 +418,8 @@ Outputs:
     Value: !Sub "https://${ApiGatewayRestApi}.execute-api.${AWS::Region}.amazonaws.com/${StageName}"
     Export:
       Name: !Sub "${StackName}-ApiInvokeUrl"
+  ApiKeyId:
+    Description: "API Gateway API Key ID"
+    Value: !Ref ApiGatewayApiKey
+    Export:
+      Name: !Sub "${StackName}-ApiKeyId"

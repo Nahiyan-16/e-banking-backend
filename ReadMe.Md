@@ -57,15 +57,7 @@ This section provides instructions for setting up and running the project on you
 
 # Teardown backend
 
-## Delete the Lambda Bucket
-
-```sh
-cd scripts/lambda
-chmod +x delete-lambda-bucket.sh
-./delete-lambda-bucket.sh
-```
-
-## Teardown the cloudformation stacks
+## Teardown the cloudformation stacks and delete all S3 buckets
 
 ```sh
 cd scripts
