@@ -20,14 +20,8 @@ cd e-banking-app
 
 This section outlines the steps to deploy the backend using AWS services.
 
-1. **Prepare the Lambda Function:**
-
-   - Navigate to the `scripts/lambda` directory.
-   - **Optional:** Update the AWS region in the `lambda-function-s3.sh` script if necessary.
-   - Run the script `lambda-function-s3.sh` to create an S3 bucket and store the public-facing Lambda function.
-
-2. **Deploy CloudFormation Templates:**
-   - Navigate to the `scripts/cloudformation` directory.
+1. **Deploy Entire Backend:**
+   - Navigate to the `scripts/` directory.
    - Run the `deploy-backend.sh` script. This will deploy all of your backend's CloudFormation templates, creating the necessary AWS infrastructure.
 
 # OPTION 2:
